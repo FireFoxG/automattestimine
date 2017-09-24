@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/automattestimine.iml" filepath="$PROJECT_DIR$/automattestimine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/automattestimine_main.iml" filepath="$PROJECT_DIR$/.idea/modules/automattestimine_main.iml" group="automattestimine" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/automattestimine_test.iml" filepath="$PROJECT_DIR$/.idea/modules/automattestimine_test.iml" group="automattestimine" />
     </modules>
   </component>
 </project>
