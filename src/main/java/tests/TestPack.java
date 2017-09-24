@@ -25,6 +25,45 @@ API väljund on JSON formaadis
 
 public class TestPack {
 
+/*
+    I assume that JSON response is in form of :
+
+    {"city":"Tallinn",
+     "coordinates":"120:588",
+     "current": {
+        "temperature": "20",
+        "clouds:"10%",
+        etc..},
+     "nextDays": {
+        "day1": {
+            "minTemp": "7"
+            "maxTemp": "14"
+            "0": {
+                "temperature": "10",
+                "clouds:"10%"},
+            "3": {
+                "temperature": "12",
+                "clouds:"10%"},
+            etc..
+            },
+            day2": {
+            "minTemp": "5"
+            "maxTemp": "23"
+            "0": {
+                "temperature": "5",
+                "clouds:"10%"},
+            "3": {
+                "temperature": "10",
+                "clouds:"10%"},
+            etc..
+            },
+            etc..
+        }
+     }
+  }
+
+*/
+
     @Test
     void isResponseJson() {
         API api = new API();
@@ -44,7 +83,7 @@ public class TestPack {
         API api = new API();
         JSONObject response = api.getForecast("Tallinn");
         Integer currentTemperature = (Integer) ((JSONObject) response.get("current")).get("temperature");
-        assertEquals(true, currentTemperature > -50 && currentTemperature < 60 ? true : false);
+        assertEquals(true, currentTemperature > -90 && currentTemperature < 60 ? true : false); // minimum temperature recorded on Earth -89.2, maximum 56.7
     }
 
     @Test
@@ -58,13 +97,17 @@ public class TestPack {
             for(String hourKey : dayForecast.keySet()) {
                 JSONObject hourInfo = (JSONObject) dayForecast.get(hourKey);
                 Integer hourTemperature = (Integer) hourInfo.get("temperature");
-                if(hourTemperature < -50 && hourTemperature > 60) {
+                if(hourTemperature < -90 && hourTemperature > 60) {
                     complexBoolean = false;
+                    break;
                 }
+            }
+            if(!complexBoolean) {
+                break;
             }
         }
         Integer currentTemperature = (Integer) ((JSONObject) response.get("current")).get("temperature");
-        assertEquals(true, currentTemperature > -50 && currentTemperature < 60 && complexBoolean);
+        assertEquals(true, currentTemperature > -90 && currentTemperature < 60 && complexBoolean);
     }
 
     @Test
@@ -98,13 +141,19 @@ public class TestPack {
             for(String hourKey : dayForecast.keySet()) { //assuming that hourKeys are 0, 3, 6, 9, 12, 15, 18, 21
                 if (i != 0) { // ignoring first key
                     complexBoolean = Integer.parseInt(hourKey) - Integer.parseInt(previousKey) == 3;
+                    if(!complexBoolean) {
+                        break;
+                    }
                 } else {
                     i++;
                 }
                 previousKey = hourKey;
-                assertEquals(true, complexBoolean);
+            }
+            if(!complexBoolean) {
+                break;
             }
         }
+        assertEquals(true, complexBoolean);
     }
 
     @Test
@@ -114,6 +163,40 @@ public class TestPack {
         JSONObject response = api.getForecast("Tallinn");
         JSONObject nextThreeDays = (JSONObject) response.get("nextDays");
         assertEquals(3, nextThreeDays.keySet().size());
+    }
+
+    @Test
+    void isEveryDayForecastHasMinMaxTemp() {
+        API api = new API();
+        boolean complexBoolean = true;
+        JSONObject response = api.getForecast("Tallinn");
+        JSONObject nextThreeDays = (JSONObject) response.get("nextDays");
+        for(String dayKey : nextThreeDays.keySet()) {
+            JSONObject dayForecast = (JSONObject) nextThreeDays.get(dayKey);
+            complexBoolean = dayForecast.has("minTemp") && dayForecast.has("maxTemp");
+            if(!complexBoolean) {
+                break;
+            }
+        }
+        assertEquals(true, complexBoolean);
+    }
+
+    @Test
+    void areMinMaxTempsDigit() {
+        API api = new API();
+        boolean complexBoolean = true;
+        JSONObject response = api.getForecast("Tallinn");
+        JSONObject nextThreeDays = (JSONObject) response.get("nextDays");
+        for(String dayKey : nextThreeDays.keySet()) {
+            JSONObject dayForecast = (JSONObject) nextThreeDays.get(dayKey);
+            Integer minTemp = Integer.parseInt((String) dayForecast.get("minTemp"));
+            Integer maxTemp = Integer.parseInt((String) dayForecast.get("maxTemp"));
+            if(minTemp < -90 || minTemp > 60 || maxTemp < -90 || maxTemp > 60) {
+                complexBoolean = false;
+                break;
+            }
+        }
+        assertEquals(true, complexBoolean);
     }
 
 }
