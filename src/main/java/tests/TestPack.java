@@ -85,4 +85,35 @@ public class TestPack {
         assertEquals(true, matcher.find());
     }
 
+    @Test
+    void isThreeHourStep() {
+        API api = new API();
+        boolean complexBoolean = true;
+        JSONObject response = api.getForecast("Tallinn");
+        JSONObject nextThreeDays = (JSONObject) response.get("nextDays");
+        for(String dayKey : nextThreeDays.keySet()) {
+            JSONObject dayForecast = (JSONObject) nextThreeDays.get(dayKey);
+            String previousKey = "";
+            int i = 0;
+            for(String hourKey : dayForecast.keySet()) { //assuming that hourKeys are 0, 3, 6, 9, 12, 15, 18, 21
+                if (i != 0) { // ignoring first key
+                    complexBoolean = Integer.parseInt(hourKey) - Integer.parseInt(previousKey) == 3;
+                } else {
+                    i++;
+                }
+                previousKey = hourKey;
+                assertEquals(true, complexBoolean);
+            }
+        }
+    }
+
+    @Test
+    void isThreeDaysForecast() {
+        API api = new API();
+        boolean complexBoolean = true;
+        JSONObject response = api.getForecast("Tallinn");
+        JSONObject nextThreeDays = (JSONObject) response.get("nextDays");
+        assertEquals(3, nextThreeDays.keySet().size());
+    }
+
 }
