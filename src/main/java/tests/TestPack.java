@@ -1,10 +1,18 @@
 package tests;
 
-import api.API;
+import api.WeatherService;
+import api.WeatherServiceImpl;
 import org.json.*;
 import org.junit.jupiter.api.Test;
 
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +32,7 @@ API väljund on JSON formaadis
  */
 
 public class TestPack {
+    private static final String DEFAULT_CITY = "Tallinn";
 
 /*
     I assume that JSON response is in form of :
@@ -64,116 +73,141 @@ public class TestPack {
 
 */
 
+/* update 08.10.17
+    So actual response from Weather service can be of two different types -
+        1-day looks like this:
+            {"coord":{"lon":139,"lat":35},
+            "sys":{"country":"JP","sunrise":1369769524,"sunset":1369821049},
+            "weather":[{"id":804,"main":"clouds","description":"overcast clouds","icon":"04n"}],
+            "main":{"temp":289.5,"humidity":89,"pressure":1013,"temp_min":287.04,"temp_max":292.04},
+            "wind":{"speed":7.31,"deg":187.002},
+            "rain":{"3h":0},
+            "clouds":{"all":92},
+            "dt":1369824698,
+            "id":1851632,
+            "name":"Shuzenji",
+            "cod":200}
+
+        5-day looks like this:
+            {"city":{"id":1851632,"name":"Shuzenji",
+            "coord":{"lon":138.933334,"lat":34.966671},
+            "country":"JP",
+            "cod":"200",
+            "message":0.0045,
+            "cnt":38,
+            "list":[
+                {"dt":1406106000,
+                "main":{
+                    "temp":298.77,
+                    "temp_min":298.77,
+                    "temp_max":298.774,
+                    "pressure":1005.93,
+                    "sea_level":1018.18,
+                    "grnd_level":1005.93,
+                    "humidity":87
+                    "temp_kf":0.26},
+                "weather":[{"id":804,"main":"Clouds","description":"overcast clouds","icon":"04d"}],
+                "clouds":{"all":88},
+                "wind":{"speed":5.71,"deg":229.501},
+                "sys":{"pod":"d"},
+                "dt_txt":"2014-07-23 09:00:00"}
+                ]}
+
+*/
+
     @Test
     void isResponseJson() {
-        API api = new API();
-        JSONObject response = api.getForecast("Tallinn");
+        WeatherService api = new WeatherServiceImpl();
+        JSONObject response = api.getForecast(DEFAULT_CITY);
         assertEquals(true, response.toString().startsWith("{") && response.toString().endsWith("}"));
     }
 
     @Test
-    void areBothForecastTypesPresent() {
-        API api = new API();
-        JSONObject response = api.getForecast("Tallinn");
-        assertEquals(true, response.has("current") && response.has("nextDays"));
+    void isResponseValid() {
+        WeatherService api = new WeatherServiceImpl();
+        JSONObject response = api.getForecast(DEFAULT_CITY);
+        assertEquals(true, response.has("cod") && response.get("cod").toString().equals("200"));
     }
 
     @Test
     void isCurrentTemperatureReal() {
-        API api = new API();
-        JSONObject response = api.getForecast("Tallinn");
-        Integer currentTemperature = (Integer) ((JSONObject) response.get("current")).get("temperature");
+        WeatherService api = new WeatherServiceImpl();
+        JSONObject response = api.getForecast(DEFAULT_CITY);
+        Integer currentTemperature = (Integer) ((JSONObject) response.get("main")).get("temp");
         assertEquals(true, currentTemperature > -90 && currentTemperature < 60 ? true : false); // minimum temperature recorded on Earth -89.2, maximum 56.7
     }
 
     @Test
     void isThreeDayForecastTemperatureReal() {
-        API api = new API();
+        WeatherService api = new WeatherServiceImpl();
         boolean complexBoolean =  true;
-        JSONObject response = api.getForecast("Tallinn");
-        JSONObject nextThreeDays = (JSONObject) response.get("nextDays");
-        for(String dayKey : nextThreeDays.keySet()) {
-            JSONObject dayForecast = (JSONObject) nextThreeDays.get(dayKey);
-            for(String hourKey : dayForecast.keySet()) {
-                JSONObject hourInfo = (JSONObject) dayForecast.get(hourKey);
-                Integer hourTemperature = (Integer) hourInfo.get("temperature");
-                if(hourTemperature < -90 && hourTemperature > 60) {
-                    complexBoolean = false;
-                    break;
-                }
-            }
-            if(!complexBoolean) {
+        JSONObject response = api.getThreeDayForecast(DEFAULT_CITY);
+       JSONArray nextFiveDays = (JSONArray) response.get("list");
+        int i = 0;
+        for(Object nextThreeHourForecast : nextFiveDays) {
+            Double hourTemperature = (Double) (((JSONObject) ((JSONObject) nextThreeHourForecast).get("main"))).get("temp");
+            if(hourTemperature < -90 || hourTemperature > 60) {
+                complexBoolean = false;
                 break;
             }
         }
-        Integer currentTemperature = (Integer) ((JSONObject) response.get("current")).get("temperature");
-        assertEquals(true, currentTemperature > -90 && currentTemperature < 60 && complexBoolean);
+        assertEquals(true, complexBoolean);
     }
 
     @Test
     void isRightResponseCity() {
-        API api = new API();
-        String someCityName = "London";
-        JSONObject response = api.getForecast(someCityName);
-        assertEquals(someCityName, (String) response.get("city"));
+        WeatherService api = new WeatherServiceImpl();
+        JSONObject response = api.getForecast(DEFAULT_CITY);
+        assertEquals(DEFAULT_CITY, (String) response.get("name"));
     }
 
     @Test
     void isRightCoordinateFormat() {
-        API api = new API();
-        JSONObject response = api.getForecast("Tallinn");
-        Pattern pattern = Pattern.compile("^\\d{3}[:]\\d{3}$");
-        Matcher matcher = pattern.matcher((String) response.get("coordinates"));
-
-        assertEquals(true, matcher.find());
+        WeatherService api = new WeatherServiceImpl();
+        JSONObject response = api.getForecast(DEFAULT_CITY);
+        Pattern pattern = Pattern.compile("^\\d{3}$");
+        assertEquals(true, ((JSONObject) response.get("coord")).get("lon") instanceof Double && ((JSONObject) response.get("coord")).get("lat") instanceof Double);
     }
 
     @Test
-    void isThreeHourStep() {
-        API api = new API();
+    void isForecastWithThreeHourStep() {
+        WeatherService api = new WeatherServiceImpl();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         boolean complexBoolean = true;
-        JSONObject response = api.getForecast("Tallinn");
-        JSONObject nextThreeDays = (JSONObject) response.get("nextDays");
-        for(String dayKey : nextThreeDays.keySet()) {
-            JSONObject dayForecast = (JSONObject) nextThreeDays.get(dayKey);
-            String previousKey = "";
-            int i = 0;
-            for(String hourKey : dayForecast.keySet()) { //assuming that hourKeys are 0, 3, 6, 9, 12, 15, 18, 21
-                if (i != 0) { // ignoring first key
-                    complexBoolean = Integer.parseInt(hourKey) - Integer.parseInt(previousKey) == 3;
-                    if(!complexBoolean) {
-                        break;
-                    }
-                } else {
-                    i++;
+        JSONObject response = api.getThreeDayForecast(DEFAULT_CITY);
+        JSONArray nextFiveDays = (JSONArray) response.get("list");
+        String previousTime = "";
+        String thisTime = "";
+        int i = 0;
+        for(Object nextThreeHourForecast : nextFiveDays) {
+            thisTime = (String) ((JSONObject) nextThreeHourForecast).get("dt_txt");
+            if (i != 0) { // ignoring first key
+                LocalDateTime  date1 = LocalDateTime .parse(thisTime, formatter);
+                LocalDateTime  date2 = LocalDateTime.parse(previousTime, formatter);
+                long hours = ChronoUnit.HOURS.between(date2, date1);
+                complexBoolean = hours == 3;
+
+                if (!complexBoolean) {
+                    break;
                 }
-                previousKey = hourKey;
+            } else {
+                i++;
             }
-            if(!complexBoolean) {
-                break;
-            }
+            previousTime = thisTime;
         }
         assertEquals(true, complexBoolean);
-    }
-
-    @Test
-    void isThreeDaysForecast() {
-        API api = new API();
-        boolean complexBoolean = true;
-        JSONObject response = api.getForecast("Tallinn");
-        JSONObject nextThreeDays = (JSONObject) response.get("nextDays");
-        assertEquals(3, nextThreeDays.keySet().size());
     }
 
     @Test
     void isEveryDayForecastHasMinMaxTemp() {
-        API api = new API();
+        WeatherService api = new WeatherServiceImpl();
         boolean complexBoolean = true;
-        JSONObject response = api.getForecast("Tallinn");
-        JSONObject nextThreeDays = (JSONObject) response.get("nextDays");
-        for(String dayKey : nextThreeDays.keySet()) {
-            JSONObject dayForecast = (JSONObject) nextThreeDays.get(dayKey);
-            complexBoolean = dayForecast.has("minTemp") && dayForecast.has("maxTemp");
+        JSONObject response = api.getThreeDayForecast(DEFAULT_CITY);
+        JSONArray nextThreeDays = (JSONArray) response.get("list");
+        for(Object nextThreeHours : nextThreeDays) {
+            JSONObject nextThreeHoursForecast = (JSONObject) nextThreeHours;
+            JSONObject nextThreeHoursForecastMain = (JSONObject) nextThreeHoursForecast.get("main");
+            complexBoolean = nextThreeHoursForecastMain.has("temp_min") && nextThreeHoursForecastMain.has("temp_max");
             if(!complexBoolean) {
                 break;
             }
@@ -182,15 +216,15 @@ public class TestPack {
     }
 
     @Test
-    void areMinMaxTempsDigit() {
-        API api = new API();
+    void areMinMaxTempsLegit() {
+        WeatherService api = new WeatherServiceImpl();
         boolean complexBoolean = true;
-        JSONObject response = api.getForecast("Tallinn");
-        JSONObject nextThreeDays = (JSONObject) response.get("nextDays");
-        for(String dayKey : nextThreeDays.keySet()) {
-            JSONObject dayForecast = (JSONObject) nextThreeDays.get(dayKey);
-            Integer minTemp = Integer.parseInt((String) dayForecast.get("minTemp"));
-            Integer maxTemp = Integer.parseInt((String) dayForecast.get("maxTemp"));
+        JSONObject response = api.getThreeDayForecast(DEFAULT_CITY);
+        JSONArray nextFiveDays = (JSONArray) response.get("list");
+        for(Object nextThreeHours : nextFiveDays) {
+            JSONObject nextThreeHoursForecast = (JSONObject) nextThreeHours;
+            Double minTemp = (Double) ((JSONObject) nextThreeHoursForecast.get("main")).get("temp_min");
+            Double maxTemp = (Double) ((JSONObject) nextThreeHoursForecast.get("main")).get("temp_max");
             if(minTemp < -90 || minTemp > 60 || maxTemp < -90 || maxTemp > 60) {
                 complexBoolean = false;
                 break;
