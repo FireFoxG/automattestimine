@@ -21,11 +21,12 @@ public class JsonReceiver {
 
     public static JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
         InputStream is = new URL(url).openStream();
+        TextFileWriter writer = new TextFileWriter();
 
         try {
             BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
             String jsonText = readAll(rd);
-            System.out.println(jsonText);
+            writer.writeStringToFile(jsonText, "output.txt");
             JSONObject json = new JSONObject(jsonText);
             return json;
         } finally {

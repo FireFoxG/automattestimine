@@ -1,4 +1,7 @@
 package api;
 
-public class NoDataFoundException {
+public class NoDataFoundException extends Exception {
+    public NoDataFoundException(String message) {
+        super(message);
+    }
 }

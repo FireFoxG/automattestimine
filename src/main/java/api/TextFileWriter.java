@@ -8,14 +8,14 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
-public class FileWriter {
+public class TextFileWriter {
     public void writeLinesToFile(List<String> list, String filename) {
         List<String> lines = list;
         Path file = Paths.get(filename);
         try {
             Files.write(file, lines, Charset.forName("UTF-8"));
         } catch (IOException e) {
-            System.out.println("FileWriter: IOE");
+            System.out.println("TextFileWriter: IOE");
         }
     }
 

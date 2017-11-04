@@ -6,14 +6,9 @@ import org.json.*;
 import org.junit.jupiter.api.Test;
 
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -141,7 +136,7 @@ public class TestPack {
     void isThreeDayForecastTemperatureReal() {
         WeatherService api = new WeatherServiceImpl();
         boolean complexBoolean =  true;
-        JSONObject response = api.getThreeDayForecast(DEFAULT_CITY);
+        JSONObject response = api.getFiveDayForecast(DEFAULT_CITY);
        JSONArray nextFiveDays = (JSONArray) response.get("list");
         int i = 0;
         for(Object nextThreeHourForecast : nextFiveDays) {
@@ -174,7 +169,7 @@ public class TestPack {
         WeatherService api = new WeatherServiceImpl();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         boolean complexBoolean = true;
-        JSONObject response = api.getThreeDayForecast(DEFAULT_CITY);
+        JSONObject response = api.getFiveDayForecast(DEFAULT_CITY);
         JSONArray nextFiveDays = (JSONArray) response.get("list");
         String previousTime = "";
         String thisTime = "";
@@ -202,7 +197,7 @@ public class TestPack {
     void isEveryDayForecastHasMinMaxTemp() {
         WeatherService api = new WeatherServiceImpl();
         boolean complexBoolean = true;
-        JSONObject response = api.getThreeDayForecast(DEFAULT_CITY);
+        JSONObject response = api.getFiveDayForecast(DEFAULT_CITY);
         JSONArray nextThreeDays = (JSONArray) response.get("list");
         for(Object nextThreeHours : nextThreeDays) {
             JSONObject nextThreeHoursForecast = (JSONObject) nextThreeHours;
@@ -219,7 +214,7 @@ public class TestPack {
     void areMinMaxTempsLegit() {
         WeatherService api = new WeatherServiceImpl();
         boolean complexBoolean = true;
-        JSONObject response = api.getThreeDayForecast(DEFAULT_CITY);
+        JSONObject response = api.getFiveDayForecast(DEFAULT_CITY);
         JSONArray nextFiveDays = (JSONArray) response.get("list");
         for(Object nextThreeHours : nextFiveDays) {
             JSONObject nextThreeHoursForecast = (JSONObject) nextThreeHours;
@@ -232,5 +227,4 @@ public class TestPack {
         }
         assertEquals(true, complexBoolean);
     }
-
 }
