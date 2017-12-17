@@ -5,11 +5,12 @@ import api.forecasts.FiveDayForecast;
 import org.json.JSONObject;
 
 public interface WeatherService {
-    public JSONObject getForecast(String cityName);
 
-    public JSONObject getFiveDayForecast(String cityName);
+    public CurrentForecast getForecast(String cityName) throws NoDataFoundException;
 
-    public CurrentForecast getForecast() throws NoDataFoundException;
+    public FiveDayForecast getFiveDayForecast(String cityName) throws NoDataFoundException;
 
-    public FiveDayForecast getFiveDayForecast() throws NoDataFoundException;
+    public boolean serviceIsAvailable();
+
+    public void updateLocalData();
 }

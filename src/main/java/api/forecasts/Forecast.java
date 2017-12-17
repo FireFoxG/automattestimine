@@ -58,4 +58,13 @@ public abstract class Forecast {
         return latitude;
     }
 
+    @Override
+    public String toString() {
+        return "Forecast{" +
+                "cityName='" + cityName + '\'' +
+                ", country='" + country + '\'' +
+                ", longitude=" + longitude +
+                ", latitude=" + latitude +
+                '}';
+    }
 }

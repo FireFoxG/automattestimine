@@ -2,7 +2,7 @@ package api;
 
 import api.forecasts.CurrentForecast;
 import api.forecasts.FiveDayForecast;
-import org.json.JSONObject;
+import api.helpers.TextFileWriter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,6 +12,13 @@ public class Main {
     public static void main(String[] args) {
         WeatherService service = new WeatherServiceImpl();
         TextFileWriter writer = new TextFileWriter();
+        service.updateLocalData();
+        try {
+            CurrentForecast forecast = service.getForecast("New York");
+            System.out.println(forecast);
+        } catch (NoDataFoundException e) {
+            e.printStackTrace();
+        }
         System.out.println();
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -19,17 +26,14 @@ public class Main {
                 System.out.print("Enter name of the city: ");
                 String s = br.readLine();
                 if(s.trim().length() > 0) {
-                    writer.writeStringToFile(s, "input.txt");
                     try {
-                        CurrentForecast forecast1 = service.getForecast();
-                        System.out.println(forecast1.getCityName() + " " + forecast1.getCountry());
-                        System.out.println("Current temperature is: " + forecast1.getCurrentTemperature());
-                        System.out.println("Description: " + forecast1.getWeatherDescription());
+                        CurrentForecast forecast1 = service.getForecast(s);
+                        System.out.println(forecast1);
 
-                        FiveDayForecast forecast2 = service.getFiveDayForecast();
-                        System.out.println(forecast1.getCityName() + " " + forecast2.getCountry());
-                        System.out.println("Maximum temperature is: " + forecast2.getMaxTempForNextThreeDays());
-                        System.out.println("Minimum temp is: " + forecast2.getMinTempForNextThreeDays());
+                        FiveDayForecast forecast2 = service.getFiveDayForecast(s);
+                        System.out.println(forecast2);
+                        System.out.println("Maximum temperature in next 3 days is: " + forecast2.getMaxTempForNextThreeDays());
+                        System.out.println("Minimum temp in next 3 days is: " + forecast2.getMinTempForNextThreeDays());
 
                     } catch (NoDataFoundException ex) {
                         System.out.println(ex.getMessage());

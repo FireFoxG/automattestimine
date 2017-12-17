@@ -19,6 +19,11 @@ public class FiveDayForecast extends Forecast {
         return json.has("country") ? json.getString("country") : "NaN";
     }
 
+    @Override
+    public String getCityNameFromJson(JSONObject json) {
+        return json.has("name") ? json.getString("name") : "NaN";
+    }
+
     private List<TimeForecast> getDaysFromJson(JSONObject json) {
         List<TimeForecast> hourForecasts = new ArrayList<TimeForecast>();
         JSONArray listOfTimeForecasts = json.has("list") ? json.getJSONArray("list") : new JSONArray();
@@ -56,11 +61,13 @@ public class FiveDayForecast extends Forecast {
     public double getMaxTempForNextThreeDays() {
         double highest = -999;
         int counter = getIndexOfNextDayTimeForecast();
-        for(int i = counter; i<counter + 24; i++) {
-            TimeForecast forecast = everyThreeHourForecasts.get(i);
-            double temp = forecast.getMaxTemperature();
-            if(temp > highest) {
-                highest = temp;
+        if(!everyThreeHourForecasts.isEmpty()) {
+            for(int i = counter; i<counter + 24; i++) {
+                TimeForecast forecast = everyThreeHourForecasts.get(i);
+                double temp = forecast.getMaxTemperature();
+                if(temp > highest) {
+                    highest = temp;
+                }
             }
         }
         return highest;
@@ -69,13 +76,32 @@ public class FiveDayForecast extends Forecast {
     public double getMinTempForNextThreeDays() {
         double lowest = 999;
         int counter = getIndexOfNextDayTimeForecast();
-        for(int i = counter; i<counter + 24; i++) {
-            TimeForecast forecast = everyThreeHourForecasts.get(i);
-            double temp = forecast.getMinTemperature();
-            if(temp < lowest) {
-                lowest = temp;
+        if(!everyThreeHourForecasts.isEmpty()) {
+            for (int i = counter; i < counter + 24; i++) {
+                TimeForecast forecast = everyThreeHourForecasts.get(i);
+                double temp = forecast.getMinTemperature();
+                if (temp < lowest) {
+                    lowest = temp;
+                }
             }
         }
         return lowest;
+    }
+
+    @Override
+    public String toString() {
+        String additionalTimeForecasts = "";
+        for(TimeForecast tf : everyThreeHourForecasts) {
+            additionalTimeForecasts+= tf.time + "\n" +
+                    " max temp: " + tf.getMaxTemperature() + "\n" +
+                    " min temp: " + tf.getMinTemperature() +"\n";
+            if(everyThreeHourForecasts.indexOf(tf) == 2) {
+                break;
+            }
+        }
+
+        return "Linna nimi: " + getCityName() + "\n" +
+                "koordinatid: " + getLongitude() + " " + getLatitude() + "\n" +
+                additionalTimeForecasts;
     }
 }

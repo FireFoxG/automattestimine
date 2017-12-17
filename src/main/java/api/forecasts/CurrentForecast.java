@@ -28,6 +28,7 @@ public class CurrentForecast extends Forecast {
         return currentTimeForecast.getTemperature();
     }
 
+
     public String getWeatherDescription() {
         return currentTimeForecast.getDescription();
     }
