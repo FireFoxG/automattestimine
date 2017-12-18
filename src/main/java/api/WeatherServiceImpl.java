@@ -25,6 +25,7 @@ public class WeatherServiceImpl implements WeatherService {
     private CitynamesTracker citynamesTracker;
     private TextFileReader textFileReader;
     private JsonReceiver jsonReceiver;
+    private TextFileWriter writer;
 
     public enum ForecastType {
         CURRENT,
@@ -32,11 +33,12 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
 
-    public WeatherServiceImpl(ForecastReader forecastReader, CitynamesTracker citynamesTracker, JsonReceiver jsonReceiver) {
+    public WeatherServiceImpl(ForecastReader forecastReader, JsonReceiver jsonReceiver, TextFileWriter writer, TextFileReader reader) {
         this.forecastReader = forecastReader;
-        this.citynamesTracker = citynamesTracker;
-        this.textFileReader = forecastReader.getTextFileReader();
+        this.citynamesTracker = new CitynamesTracker(reader, writer);
+        this.textFileReader = reader;
         this.jsonReceiver = jsonReceiver;
+        this.writer = writer;
     }
 
     @Override
@@ -138,7 +140,6 @@ public class WeatherServiceImpl implements WeatherService {
             if(currentForecastJson.keySet().isEmpty() || fiveDaysForecastJson.keySet().isEmpty()) {
                 System.out.println("Data was not received for city " + cityName);
             } else {
-                TextFileWriter writer = new TextFileWriter();
                 writer.writeDataToFile(new FiveDayForecast(fiveDaysForecastJson)+"\n", filename);
                 writer.appendDataToFile("current temp: " + new CurrentForecast(currentForecastJson).getCurrentTemperature() + "\n", filename);
                 writer.appendDataToFile(CURRENT_FORECAST_TAG + currentForecastJson.toString()+"\n", filename);

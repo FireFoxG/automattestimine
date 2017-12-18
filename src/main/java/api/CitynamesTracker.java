@@ -8,6 +8,14 @@ import java.util.List;
 import static api.Config.INPUT_FILENAME;
 
 public class CitynamesTracker {
+    private TextFileReader reader;
+    private TextFileWriter writer;
+
+    public CitynamesTracker(TextFileReader reader, TextFileWriter writer) {
+        this.reader = reader;
+        this.writer = writer;
+    }
+
     public void writeCityname(String cityname) {
         if(!cityname.isEmpty()) {
             TextFileReader reader = new TextFileReader();

@@ -12,7 +12,11 @@ import java.io.InputStreamReader;
 
 public class Main {
     public static void main(String[] args) {
-        WeatherService service = new WeatherServiceImpl(new ForecastReader(new TextFileReader()), new CitynamesTracker(), new JsonReceiver());
+        WeatherService service = new WeatherServiceImpl(
+                new ForecastReader(new TextFileReader()),
+                new JsonReceiver(),
+                new TextFileWriter(),
+                new TextFileReader());
         service.updateLocalData();
         try {
             CurrentForecast forecast = service.getForecast("New York");
