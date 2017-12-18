@@ -2,6 +2,8 @@ package api;
 
 import api.forecasts.CurrentForecast;
 import api.forecasts.FiveDayForecast;
+import api.helpers.JsonReceiver;
+import api.helpers.TextFileReader;
 import api.helpers.TextFileWriter;
 
 import java.io.BufferedReader;
@@ -10,8 +12,7 @@ import java.io.InputStreamReader;
 
 public class Main {
     public static void main(String[] args) {
-        WeatherService service = new WeatherServiceImpl();
-        TextFileWriter writer = new TextFileWriter();
+        WeatherService service = new WeatherServiceImpl(new ForecastReader(new TextFileReader()), new CitynamesTracker(), new JsonReceiver());
         service.updateLocalData();
         try {
             CurrentForecast forecast = service.getForecast("New York");

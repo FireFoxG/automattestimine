@@ -12,7 +12,7 @@ import java.util.Optional;
 // Sources from here: https://stackoverflow.com/questions/4308554/simplest-way-to-read-json-from-a-url-in-java
 
 public class JsonReceiver {
-    private static String readAll(Reader rd) throws IOException {
+    private String readAll(Reader rd) throws IOException {
         StringBuilder sb = new StringBuilder();
         int cp;
         while ((cp = rd.read()) != -1) {
@@ -21,7 +21,7 @@ public class JsonReceiver {
         return sb.toString();
     }
 
-    public static JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
+    public JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
         URL serviceUrl = new URL(url);
         HttpURLConnection connection = (HttpURLConnection) serviceUrl.openConnection();
         if(connection.getContentLength() > 0) {

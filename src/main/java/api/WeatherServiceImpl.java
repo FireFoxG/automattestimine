@@ -21,11 +21,22 @@ public class WeatherServiceImpl implements WeatherService {
     private static final String TEST_SERVICE_AVAILABILITY_URL = "http://api.openweathermap.org/data/2.5/forecast?appid=%s";
 
     private static final String API_KEY = "d431a365f6c0ac4c87b2fd03189dad41";
-    private ForecastReader forecastReader = new ForecastReader();
+    private ForecastReader forecastReader;
+    private CitynamesTracker citynamesTracker;
+    private TextFileReader textFileReader;
+    private JsonReceiver jsonReceiver;
 
-    private enum forecastType {
+    public enum ForecastType {
         CURRENT,
         FIVEDAYS;
+    }
+
+
+    public WeatherServiceImpl(ForecastReader forecastReader, CitynamesTracker citynamesTracker, JsonReceiver jsonReceiver) {
+        this.forecastReader = forecastReader;
+        this.citynamesTracker = citynamesTracker;
+        this.textFileReader = forecastReader.getTextFileReader();
+        this.jsonReceiver = jsonReceiver;
     }
 
     @Override
@@ -46,16 +57,16 @@ public class WeatherServiceImpl implements WeatherService {
         return getForecastFromUrl(FIVE_DAYS_FORECAST_SERVICE_URL, cityName, API_KEY);
     }
 
-    private JSONObject getForecastData(String cityName, forecastType type) {
+    private JSONObject getForecastData(String cityName, ForecastType type) {
         if(serviceIsAvailable()) {
-            if(type.equals(forecastType.CURRENT)) {
+            if(type.equals(ForecastType.CURRENT)) {
                 System.out.println("Fetching external current forecast data");
                 return getCurrentForecastJsonFromUrl(cityName);
             } else {
                 return getFiveDayForecastJsonFromUrl(cityName);
             }
         } else {
-            JSONObject localData = type.equals(forecastType.CURRENT) ? forecastReader.readCurrentForecastData(cityName) : forecastReader.readFiveDayForecastData(cityName);
+            JSONObject localData = type.equals(ForecastType.CURRENT) ? forecastReader.readCurrentForecastData(cityName) : forecastReader.readFiveDayForecastData(cityName);
             if(localData.keySet().isEmpty()) {
                 System.out.println("No data found locally and no connection available");
                 return new JSONObject();
@@ -67,11 +78,11 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     private JSONObject getCurrentForecastData(String cityName) {
-        return getForecastData(cityName, forecastType.CURRENT);
+        return getForecastData(cityName, ForecastType.CURRENT);
     }
 
     private JSONObject getFiveDaysForecastData(String cityName) {
-        return getForecastData(cityName, forecastType.FIVEDAYS);
+        return getForecastData(cityName, ForecastType.FIVEDAYS);
     }
 
     private JSONObject getForecastFromUrl(String serviceUrl, String cityName, String key) {
@@ -79,8 +90,7 @@ public class WeatherServiceImpl implements WeatherService {
         JSONObject jsonFromUrl = getResponseFromService(url);
         if(!jsonFromUrl.keySet().isEmpty()) {
             if(validResponse(jsonFromUrl)) {
-                CitynamesTracker tracker = new CitynamesTracker();
-                tracker.writeCityname(cityName);
+                citynamesTracker.writeCityname(cityName);
             } else {
                 System.out.println("City you requested was not found");
             }
@@ -92,7 +102,7 @@ public class WeatherServiceImpl implements WeatherService {
 
     private JSONObject getResponseFromService(String url) {
         try {
-            return JsonReceiver.readJsonFromUrl(url);
+            return jsonReceiver.readJsonFromUrl(url);
         } catch (IOException e) {
             System.out.println("JsonReceiver couldn't get response from API");
             return new JSONObject();
@@ -101,7 +111,7 @@ public class WeatherServiceImpl implements WeatherService {
 
     public boolean serviceIsAvailable() {
         try {
-            JSONObject response = JsonReceiver.readJsonFromUrl(String.format(TEST_SERVICE_AVAILABILITY_URL, API_KEY));
+            JSONObject response = jsonReceiver.readJsonFromUrl(String.format(TEST_SERVICE_AVAILABILITY_URL, API_KEY));
             if(response.has("cod") && response.has("message")) {
                 if(response.get("cod").toString().equals("400")) {
                     return true;
@@ -119,8 +129,7 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     public void updateLocalData() {
-        TextFileReader reader = new TextFileReader();
-        List<String> inputData = reader.readDataFromFile(Config.INPUT_FILENAME);
+        List<String> inputData = textFileReader.readDataFromFile(Config.INPUT_FILENAME);
         for(String line : inputData) {
             String cityName = line;
             String filename = FileFormatHelper.addTxtIfNoFoundInFilename(cityName);
