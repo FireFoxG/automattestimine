@@ -21,12 +21,12 @@ public class CitynamesTracker {
             TextFileReader reader = new TextFileReader();
             List<String> data = reader.readDataFromFile(INPUT_FILENAME);
             for(String line : data) {
-                if(line.equals(cityname)) {
+                if(line.trim().toLowerCase().equals(cityname.trim().toLowerCase())) {
                     return;
                 }
             }
             TextFileWriter writer = new TextFileWriter();
-            writer.appendDataToFile(cityname, INPUT_FILENAME);
+            writer.appendDataToFile(cityname.trim(), INPUT_FILENAME);
         }
     }
 }
