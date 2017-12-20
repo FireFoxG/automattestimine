@@ -20,12 +20,12 @@ public class CurrentForecast extends Forecast {
 
 
     public double getMaximumTemperature() {
-        return currentTimeForecast.getTemperature();
+        return currentTimeForecast.getMaxTemperature();
     }
 
 
-    public double getMinimumtTemperature() {
-        return currentTimeForecast.getTemperature();
+    public double getMinimumTemperature() {
+        return currentTimeForecast.getMinTemperature();
     }
 
 

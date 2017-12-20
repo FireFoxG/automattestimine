@@ -1,7 +1,7 @@
 package api;
 
 import api.forecasts.CurrentForecast;
-import api.forecasts.FiveDayForecast;
+import api.forecasts.ThreeDaysForecast;
 import api.helpers.FileFormatHelper;
 import api.helpers.JsonReceiver;
 import api.helpers.TextFileReader;
@@ -47,8 +47,8 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     @Override
-    public FiveDayForecast getFiveDayForecast(String cityName) throws NoDataFoundException{
-        return new FiveDayForecast(getFiveDaysForecastData(cityName));
+    public ThreeDaysForecast getFiveDayForecast(String cityName) throws NoDataFoundException{
+        return new ThreeDaysForecast(getFiveDaysForecastData(cityName));
     }
 
     private JSONObject getCurrentForecastJsonFromUrl(String cityName) {
@@ -140,7 +140,7 @@ public class WeatherServiceImpl implements WeatherService {
             if(currentForecastJson.keySet().isEmpty() || fiveDaysForecastJson.keySet().isEmpty()) {
                 System.out.println("Data was not received for city " + cityName);
             } else {
-                writer.writeDataToFile(new FiveDayForecast(fiveDaysForecastJson)+"\n", filename);
+                writer.writeDataToFile(new ThreeDaysForecast(fiveDaysForecastJson)+"\n", filename);
                 writer.appendDataToFile("current temp: " + new CurrentForecast(currentForecastJson).getCurrentTemperature() + "\n", filename);
                 writer.appendDataToFile(CURRENT_FORECAST_TAG + currentForecastJson.toString()+"\n", filename);
                 writer.appendDataToFile(FIVE_DAYS_FORECAST_TAG + fiveDaysForecastJson.toString()+"\n", filename);

@@ -2,19 +2,17 @@ package tests;
 
 import api.*;
 import api.forecasts.CurrentForecast;
-import api.forecasts.FiveDayForecast;
+import api.forecasts.ThreeDaysForecast;
 import api.helpers.JsonReceiver;
 import api.helpers.TextFileReader;
 import api.helpers.TextFileWriter;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,7 +58,7 @@ public class NewTestPack {
 
     @Test
     void isRightResponseCityInFiveDayForecast() throws NoDataFoundException{
-        FiveDayForecast response = api.getFiveDayForecast(DEFAULT_CITY);
+        ThreeDaysForecast response = api.getFiveDayForecast(DEFAULT_CITY);
         assertEquals(DEFAULT_CITY, response.getCityName());
     }
 
@@ -104,7 +102,7 @@ public class NewTestPack {
 
     @Test
     void checkIfFiveDaysForecastHasCountrySet() throws  NoDataFoundException{
-        FiveDayForecast response = api.getFiveDayForecast(DEFAULT_CITY);
+        ThreeDaysForecast response = api.getFiveDayForecast(DEFAULT_CITY);
         assertEquals("EE", response.getCountry());
     }
 

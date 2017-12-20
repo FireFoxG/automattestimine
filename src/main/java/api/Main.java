@@ -1,7 +1,7 @@
 package api;
 
 import api.forecasts.CurrentForecast;
-import api.forecasts.FiveDayForecast;
+import api.forecasts.ThreeDaysForecast;
 import api.helpers.JsonReceiver;
 import api.helpers.TextFileReader;
 import api.helpers.TextFileWriter;
@@ -35,10 +35,11 @@ public class Main {
                         CurrentForecast forecast1 = service.getForecast(s);
                         System.out.println(forecast1);
 
-                        FiveDayForecast forecast2 = service.getFiveDayForecast(s);
+                        ThreeDaysForecast forecast2 = service.getFiveDayForecast(s);
                         System.out.println(forecast2);
                         System.out.println("Maximum temperature in next 3 days is: " + forecast2.getMaxTempForNextThreeDays());
                         System.out.println("Minimum temp in next 3 days is: " + forecast2.getMinTempForNextThreeDays());
+                        System.out.println("Maximum temperature of the day after tomorrow is: \n" + forecast2.getNextThreeDaysForecast());
 
                     } catch (NoDataFoundException ex) {
                         System.out.println(ex.getMessage());

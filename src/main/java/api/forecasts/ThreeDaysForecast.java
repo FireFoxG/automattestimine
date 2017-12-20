@@ -6,12 +6,15 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FiveDayForecast extends Forecast {
+public class ThreeDaysForecast extends Forecast {
     List<TimeForecast> everyThreeHourForecasts;
+    List<DayForecast> nextThreeDaysForecast;
 
-    public FiveDayForecast(JSONObject json) {
+    public ThreeDaysForecast(JSONObject json) {
         super(json.has("city") ? json.getJSONObject("city") : new JSONObject());
-        this.everyThreeHourForecasts = getDaysFromJson(json);
+        this.everyThreeHourForecasts = getTimeForecastsFromJson(json);
+        List<DayForecast> dayForecasts = getDayForecasts(everyThreeHourForecasts);
+        this.nextThreeDaysForecast = dayForecasts.size() >= 3 ? dayForecasts.subList(0,3) : dayForecasts;
     }
 
     @Override
@@ -24,7 +27,28 @@ public class FiveDayForecast extends Forecast {
         return json.has("name") ? json.getString("name") : "NaN";
     }
 
-    private List<TimeForecast> getDaysFromJson(JSONObject json) {
+    private List<DayForecast> getDayForecasts(List<TimeForecast> timeForecasts) {
+        List<DayForecast> dayForecasts = new ArrayList<>();
+        int counter = getIndexOfNextDayTimeForecast(timeForecasts);
+        if(timeForecasts.size() > 0) {
+            List<TimeForecast> actualForecomingTimeForecasts = timeForecasts.subList(counter, timeForecasts.size());
+            List<TimeForecast> timeForecastsForOneDay = new ArrayList<>();
+            int dateToStart = actualForecomingTimeForecasts.get(0).time.getDayOfMonth();
+            for(TimeForecast t : actualForecomingTimeForecasts) {
+                int dayOfCurrentTimeForecast = t.time.getDayOfMonth();
+                if(dayOfCurrentTimeForecast == dateToStart) {
+                    timeForecastsForOneDay.add(t);
+                } else {
+                    dayForecasts.add(new DayForecast(timeForecastsForOneDay));
+                    dateToStart = dayOfCurrentTimeForecast;
+                    timeForecastsForOneDay = new ArrayList<>();
+                }
+            }
+        }
+        return dayForecasts;
+    }
+
+    private List<TimeForecast> getTimeForecastsFromJson(JSONObject json) {
         List<TimeForecast> hourForecasts = new ArrayList<TimeForecast>();
         JSONArray listOfTimeForecasts = json.has("list") ? json.getJSONArray("list") : new JSONArray();
         if(listOfTimeForecasts.length() > 0) {
@@ -37,11 +61,11 @@ public class FiveDayForecast extends Forecast {
         return hourForecasts;
     }
 
-    private int getIndexOfNextDayTimeForecast() {
+    private int getIndexOfNextDayTimeForecast(List<TimeForecast> timeForecasts) {
         int counter = 0;
-        for(TimeForecast f : everyThreeHourForecasts) {
+        for(TimeForecast f : timeForecasts) {
             if(f.time.getHour() == 0) {
-                counter = everyThreeHourForecasts.indexOf(f);
+                counter = timeForecasts.indexOf(f);
                 break;
             }
         }
@@ -50,17 +74,18 @@ public class FiveDayForecast extends Forecast {
 
     public double getAverageTemperatureForNextThreeDays() {
         double sum = 0;
-        int counter = getIndexOfNextDayTimeForecast();
-        for(int i = counter; i<counter + 24; i++) { // 3h step -> 8 steps per day * 3 days
+        int NUMBER_OF_3_HOUR_STEPS = 24;
+        int counter = getIndexOfNextDayTimeForecast(everyThreeHourForecasts);
+        for(int i = counter; i<counter + NUMBER_OF_3_HOUR_STEPS; i++) { // 3h step -> 8 steps per day * 3 days
             TimeForecast forecast = everyThreeHourForecasts.get(i);
             sum+= forecast.getTemperature();
         }
-        return sum/24;
+        return sum/NUMBER_OF_3_HOUR_STEPS;
     }
 
     public double getMaxTempForNextThreeDays() {
         double highest = -999;
-        int counter = getIndexOfNextDayTimeForecast();
+        int counter = getIndexOfNextDayTimeForecast(everyThreeHourForecasts);
         if(!everyThreeHourForecasts.isEmpty()) {
             for(int i = counter; i<counter + 24; i++) {
                 TimeForecast forecast = everyThreeHourForecasts.get(i);
@@ -75,7 +100,7 @@ public class FiveDayForecast extends Forecast {
 
     public double getMinTempForNextThreeDays() {
         double lowest = 999;
-        int counter = getIndexOfNextDayTimeForecast();
+        int counter = getIndexOfNextDayTimeForecast(everyThreeHourForecasts);
         if(!everyThreeHourForecasts.isEmpty()) {
             for (int i = counter; i < counter + 24; i++) {
                 TimeForecast forecast = everyThreeHourForecasts.get(i);
@@ -86,6 +111,10 @@ public class FiveDayForecast extends Forecast {
             }
         }
         return lowest;
+    }
+
+    public List<DayForecast> getNextThreeDaysForecast() {
+        return nextThreeDaysForecast;
     }
 
     @Override
