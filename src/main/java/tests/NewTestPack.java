@@ -124,7 +124,7 @@ public class NewTestPack {
         WeatherService api2 = new WeatherServiceImpl(reader,jsonReceiver, writer, textFileReader);
         when(jsonReceiver.readJsonFromUrl(anyString())).thenReturn(new JSONObject());
         api2.getForecast(DEFAULT_CITY);
-        verify(textFileReader).readDataFromFile(DEFAULT_CITY+".txt");
+        verify(textFileReader, times(1)).readDataFromFile(DEFAULT_CITY+".txt");
     }
 
     @Test
@@ -133,11 +133,11 @@ public class NewTestPack {
         ForecastReader reader = new ForecastReader(textFileReader);
         JsonReceiver jsonReceiver = mock(JsonReceiver.class);
         TextFileWriter writer = mock(TextFileWriter.class);
-        when(textFileReader.readDataFromFile(INPUT_FILENAME)).thenReturn(Arrays.asList("Berlin\nOslo"));
+        when(textFileReader.readDataFromFile(INPUT_FILENAME)).thenReturn(Arrays.asList("Berlin","Oslo"));
         when(jsonReceiver.readJsonFromUrl(anyString())).thenReturn(new JSONObject());
         WeatherService api2 = new WeatherServiceImpl(reader,jsonReceiver, writer, textFileReader);
         api2.updateLocalData();
-        verify(jsonReceiver, times(2)).readJsonFromUrl(anyString());
+        verify(jsonReceiver, times(4)).readJsonFromUrl(anyString());
     }
 
 
